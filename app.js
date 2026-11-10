@@ -130,7 +130,7 @@
     const before = Game.clone(st);
     if (!Game.apply(st, a)) return false;
     history.push(before);
-    if (mode === 'online' && !remote) send({ type: 'act', a, state: ser(st) });
+    if (mode === 'online' && !remote) send({ type: 'act', a });
     ghost = null; setTool('move');
     if (navigator.vibrate) { try { navigator.vibrate(a.type === 'wall' ? 18 : 8); } catch (e) {} }
     render(); save();
@@ -469,7 +469,8 @@
     if (m.type === 'start' && net.role === 'guest') startOnline(1 - m.hostColor);
     else if (m.type === 'act') {
       if (mode !== 'online') return;
-      if (!doAction(m.a, true) && m.state) { st = deser(m.state); render(); if (st.winner >= 0) setTimeout(showWin, 300); }
+      // ход соперника проверяется по правилам; недопустимый ход просто игнорируется
+      if (m.a && st.turn !== me) doAction(m.a, true);
     } else if (m.type === 'rematch') {
       net.peerRematch = true;
       if (!$('win').hidden && !net.wantRematch) $('win-sub').textContent = 'Друг хочет реванш';
