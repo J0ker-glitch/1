@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Заслон</title>
+<meta name="description" content="Доведи фишку до другого края первым и перекрой путь сопернику стенками.">
+<meta name="theme-color" content="#141a2b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Заслон">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- Меню -->
+  <section class="screen" id="s-menu">
+    <div class="menu">
+      <div class="logo">ЗАС<i>Л</i>ОН</div>
+      <div class="tagline">дойди первым — перекрой путь другому</div>
+      <button class="btn primary" id="b-continue" hidden>Продолжить партию<small id="continue-info"></small></button>
+      <button class="btn" id="b-local">Вдвоём на одном устройстве<small>кладёте телефон между собой</small></button>
+      <button class="btn" id="b-ai">Против компьютера<small>три уровня сложности</small></button>
+      <button class="btn" id="b-online">Онлайн с другом<small>комната по коду, у каждого своё устройство</small></button>
+      <button class="btn ghost" id="b-rules">Правила</button>
+      <button class="btn ghost" id="b-install" hidden>Как установить на телефон</button>
+    </div>
+  </section>
+
+  <!-- Выбор сложности -->
+  <section class="screen" id="s-ai" hidden>
+    <div class="topbar"><button class="back" data-go="menu" aria-label="Назад">‹</button><h2>Против компьютера</h2></div>
+    <div class="stack">
+      <div class="lbl">Сложность</div>
+      <div class="choices" id="levels">
+        <button class="choice" data-level="easy"><b>Лёгкий</b><small>иногда ошибается</small></button>
+        <button class="choice on" data-level="normal"><b>Средний</b><small>думает на ход вперёд</small></button>
+        <button class="choice" data-level="hard"><b>Сложный</b><small>просчитывает глубже</small></button>
+      </div>
+      <div class="lbl">Кто ходит первым</div>
+      <div class="seg" id="first">
+        <button class="on" data-first="me">Я</button>
+        <button data-first="ai">Компьютер</button>
+      </div>
+      <button class="btn primary center" id="b-ai-start">Начать</button>
+    </div>
+  </section>
+
+  <!-- Онлайн -->
+  <section class="screen" id="s-online" hidden>
+    <div class="topbar"><button class="back" id="b-online-back" aria-label="Назад">‹</button><h2>Онлайн с другом</h2></div>
+    <div class="stack">
+      <div class="box" id="host-box">
+        <div class="lbl">Создай комнату и отправь код другу</div>
+        <div class="code" id="room-code" hidden></div>
+        <button class="btn primary center" id="b-host">Создать комнату</button>
+        <button class="btn center" id="b-share" hidden>Отправить другу</button>
+        <div class="status" id="host-status" hidden></div>
+      </div>
+      <div class="box" id="join-box">
+        <div class="lbl">Или войди в комнату друга</div>
+        <input class="code-input" id="join-code" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="КОД" inputmode="text" aria-label="Код комнаты">
+        <button class="btn center" id="b-join">Войти</button>
+        <div class="status" id="join-status" hidden></div>
+      </div>
+      <p class="note">Оба устройства должны быть в интернете. Не сворачивайте приложение во время партии: на iPhone связь может прерваться.</p>
+    </div>
+  </section>
+
+  <!-- Игра -->
+  <section class="screen" id="s-game" hidden>
+    <div class="game">
+      <div class="player" id="p-top">
+        <span class="dot"></span><span class="name"></span><span class="walls"></span>
+      </div>
+      <div class="board-wrap" id="board-wrap">
+        <svg class="board" id="board" viewBox="-3 -3 112 112" role="img" aria-label="Игровое поле"></svg>
+        <div class="toast" id="toast" hidden></div>
+      </div>
+      <div class="player" id="p-bot">
+        <span class="dot"></span><span class="name"></span><span class="walls"></span>
+      </div>
+      <div class="controls">
+        <div class="seg" id="mode">
+          <button class="on" data-mode="move">Ход фишкой</button>
+          <button data-mode="wall">Поставить стенку</button>
+        </div>
+        <div class="wallbar" id="wallbar" hidden>
+          <button class="btn small" id="b-rotate">Повернуть</button>
+          <button class="btn small primary" id="b-place" disabled>Поставить</button>
+        </div>
+        <div class="hint" id="hint"></div>
+        <div class="tools">
+          <button class="tool" id="b-menu">Меню</button>
+          <button class="tool" id="b-undo">Отменить ход</button>
+          <button class="tool" id="b-restart">Заново</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Правила -->
+  <section class="screen" id="s-rules" hidden>
+    <div class="topbar"><button class="back" data-go="menu" aria-label="Назад">‹</button><h2>Правила</h2></div>
+    <div class="stack prose">
+      <ol>
+        <li>Поле 9×9. Янтарный начинает внизу, бирюзовый вверху, оба в середине своего края.</li>
+        <li>Цель: первым довести свою фишку до противоположного края.</li>
+        <li>За ход делаешь одно из двух: шагаешь фишкой на клетку вверх, вниз, влево или вправо, <b>или</b> ставишь стенку.</li>
+        <li>Стенка длиной в две клетки ставится в щель между клетками. Сквозь неё ходить нельзя. Стенки не могут пересекаться или накладываться.</li>
+        <li>Нельзя полностью перекрыть путь сопернику или себе. Игра не даст поставить такую стенку.</li>
+        <li>Если фишки стоят рядом, можно перепрыгнуть через соперника. Если за ним стенка или край поля, прыгаешь по диагонали.</li>
+        <li>У каждого 10 стенок. Когда они кончились, можно только ходить.</li>
+      </ol>
+      <h3>Как ставить стенку</h3>
+      <p>Нажми «Поставить стенку», затем коснись щели на поле или проведи по ней пальцем. Появится полупрозрачная стенка. «Повернуть» меняет её направление. Красная стенка означает, что сюда ставить нельзя. Нажми «Поставить», чтобы закончить ход.</p>
+    </div>
+  </section>
+
+  <!-- Установка -->
+  <section class="screen" id="s-install" hidden>
+    <div class="topbar"><button class="back" data-go="menu" aria-label="Назад">‹</button><h2>Установка</h2></div>
+    <div class="stack prose">
+      <h3>iPhone и iPad</h3>
+      <ol>
+        <li>Открой эту страницу в Safari.</li>
+        <li>Нажми кнопку «Поделиться» (квадрат со стрелкой).</li>
+        <li>Выбери «На экран Домой» и нажми «Добавить».</li>
+      </ol>
+      <h3>Android</h3>
+      <ol>
+        <li>Открой страницу в Chrome.</li>
+        <li>Нажми ⋮ в углу и выбери «Установить приложение» или «Добавить на главный экран».</li>
+      </ol>
+      <button class="btn primary center" id="b-install-now" hidden>Установить сейчас</button>
+      <h3>Компьютер</h3>
+      <p>Просто открой ссылку в браузере. В Chrome и Edge в адресной строке есть значок установки.</p>
+    </div>
+  </section>
+
+  <!-- Победа -->
+  <div class="overlay" id="win" hidden>
+    <div class="win">
+      <div class="trophy" id="win-dot"></div>
+      <h3 id="win-title"></h3>
+      <div class="hint" id="win-sub"></div>
+      <div class="stats">
+        <div><b id="st-moves"></b>ходов всего</div>
+        <div><b id="st-walls"></b>стенок поставлено</div>
+        <div><b id="st-time"></b>длилась партия</div>
+      </div>
+      <button class="btn primary center" id="b-rematch">Реванш</button>
+      <button class="btn center" id="b-win-board">Посмотреть поле</button>
+      <button class="btn ghost center" id="b-win-menu">В меню</button>
+    </div>
+  </div>
+
+  <!-- Подтверждение -->
+  <div class="overlay" id="confirm" hidden>
+    <div class="dialog">
+      <p id="confirm-text"></p>
+      <div class="row">
+        <button class="btn center" id="confirm-no">Отмена</button>
+        <button class="btn primary center" id="confirm-yes">Да</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="vendor/peerjs.min.js"></script>
+<script src="game.js"></script>
+<script src="ai.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
